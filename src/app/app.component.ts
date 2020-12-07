@@ -1,4 +1,3 @@
-import { typeWithParameters } from '@angular/compiler/src/render3/util';
 import { Component } from '@angular/core';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
