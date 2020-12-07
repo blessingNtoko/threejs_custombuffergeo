@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { timeStamp } from 'console';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
@@ -33,101 +34,27 @@ export class AppComponent {
     this.addLight(-1, 2, 4);
     this.addLight(1, 2, -2);
 
-    const vertices = [
-      // front
-      { pos: [-1, -1, 1], norm: [0, 0, 1], uv: [0, 0], },
-      { pos: [1, -1, 1], norm: [0, 0, 1], uv: [1, 0], },
-      { pos: [-1, 1, 1], norm: [0, 0, 1], uv: [0, 1], },
+    const segmentsAround = 24;
+    const segmentsDown = 16;
+    const {positions, indices} = this.makeSpherePos(segmentsAround, segmentsDown);
+    // Because positions returned are unit sphere positions so they are exactly the same values we need for normals so we can just duplicate them for the normals.
+    const normals = positions.slice();
 
-      { pos: [1, 1, 1], norm: [0, 0, 1], uv: [1, 1], },
-      // right
-      { pos: [1, -1, 1], norm: [1, 0, 0], uv: [0, 0], },
-      { pos: [1, -1, -1], norm: [1, 0, 0], uv: [1, 0], },
-      { pos: [1, 1, 1], norm: [1, 0, 0], uv: [0, 1], },
-
-      { pos: [1, 1, -1], norm: [1, 0, 0], uv: [1, 1], },
-      // back
-      { pos: [1, -1, -1], norm: [0, 0, -1], uv: [0, 0], },
-      { pos: [-1, -1, -1], norm: [0, 0, -1], uv: [1, 0], },
-      { pos: [1, 1, -1], norm: [0, 0, -1], uv: [0, 1], },
-
-      { pos: [-1, 1, -1], norm: [0, 0, -1], uv: [1, 1], },
-      // left
-      { pos: [-1, -1, -1], norm: [-1, 0, 0], uv: [0, 0], },
-      { pos: [-1, -1, 1], norm: [-1, 0, 0], uv: [1, 0], },
-      { pos: [-1, 1, -1], norm: [-1, 0, 0], uv: [0, 1], },
-
-      { pos: [-1, 1, 1], norm: [-1, 0, 0], uv: [1, 1], },
-      // top
-      { pos: [1, 1, -1], norm: [0, 1, 0], uv: [0, 0], },
-      { pos: [-1, 1, -1], norm: [0, 1, 0], uv: [1, 0], },
-      { pos: [1, 1, 1], norm: [0, 1, 0], uv: [0, 1], },
-
-      { pos: [-1, 1, 1], norm: [0, 1, 0], uv: [1, 1], },
-      // bottom
-      { pos: [1, -1, 1], norm: [0, -1, 0], uv: [0, 0], },
-      { pos: [-1, -1, 1], norm: [0, -1, 0], uv: [1, 0], },
-      { pos: [1, -1, -1], norm: [0, -1, 0], uv: [0, 1], },
-
-      { pos: [-1, -1, -1], norm: [0, -1, 0], uv: [1, 1], },
-    ];
-
-    // const positions = [];
-    // const normals = [];
-    // const uvs = [];
-
-    const numVertices = vertices.length;
+    const geometry = new THREE.BufferGeometry();
     const posNumComponents = 3;
     const normNumComponents = 3;
-    const uvNumComponents = 2;
-    const positions = new Float32Array(numVertices * posNumComponents);
-    const normals = new Float32Array(numVertices * normNumComponents);
-    const uvs = new Float32Array(numVertices * uvNumComponents);
-    let posNdx = 0;
-    let normNdx = 0;
-    let uvNdx = 0;
 
-    for (const vertex of vertices) {
-      // positions.push(...vertex.pos);
-      // normals.push(...vertex.norm);
-      // uvs.push(...vertex.uv);
-
-      positions.set(vertex.pos, posNdx);
-      normals.set(vertex.norm, normNdx);
-      uvs.set(vertex.uv, uvNdx);
-
-      posNdx += posNumComponents;
-      normNdx += normNumComponents;
-      uvNdx += uvNumComponents;
-    };
-
-    console.log('Positions ->', positions);
-    console.log('Normals ->', normals);
-    console.log('UVs ->', uvs);
-
-    const buffGeo = new THREE.BufferGeometry();
-
-    buffGeo.setAttribute('position', new THREE.BufferAttribute(positions, posNumComponents));
-    buffGeo.setAttribute('normal', new THREE.BufferAttribute(normals, normNumComponents));
-    buffGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, uvNumComponents));
-
-    buffGeo.setIndex([
-      0, 1, 2, 2, 1, 3,
-      4, 5, 6, 6, 5, 7,
-      8, 9, 10, 10, 9, 11,
-      12, 13, 14, 14, 13, 15,
-      16, 17, 18, 18, 17, 19,
-      20, 21, 22, 22, 21, 23
-    ]);
+    const positionAttr = new THREE.BufferAttribute(positions, posNumComponents);
+    positionAttr.setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute('position', positionAttr);
+    geometry.setAttribute('normal', new THREE.BufferAttribute(normals, normNumComponents));
+    geometry.setIndex(indices);
 
     const texture = this.textureLoad.load('../assets/textures/stars.jpg');
 
-    const cubes = [
-      this.makeInst(buffGeo, 'green', -4, texture),
-      this.makeInst(buffGeo, 'red', 4, texture),
-      this.makeInst(buffGeo, 'blue', 0, texture)
-    ];
-
+    const objs3D = [
+      this.makeInst(geometry, 'red', 0, texture)
+    ]
 
     window.addEventListener('resize', () => {
       this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -137,12 +64,24 @@ export class AppComponent {
 
     const animate = (time) => {
       time *= .001;
+      const temp = new THREE.Vector3();
 
-      cubes.forEach((cube, ndx) => {
-        const speed = 1 + ndx * .1;
-        const rotation = time * speed;
-        cube.rotation.x = rotation;
-        cube.rotation.y = rotation;
+      for (let i = 0; i < positions.length; i += 3) {
+        const quad = (i / 12 | 0);
+        const ringID = quad / segmentsAround | 0;
+        const ringQuadID = quad % segmentsAround;
+        const ringU = ringQuadID / segmentsAround;
+        const angle = ringU * Math.PI * 2;
+        temp.fromArray(normals, i);
+        temp.multiplyScalar(THREE.MathUtils.lerp(1, 1.4, Math.sin(time + ringID + angle) * .5 + .5));
+        temp.toArray(positions, i);
+      }
+      positionAttr.needsUpdate = true;
+
+      objs3D.forEach((obj, ndx) => {
+        const speed = -.2 + ndx * .1;
+        const rot = time * speed;
+        obj.rotation.y = rot;
       });
 
       this.orbControl.update();
@@ -170,7 +109,7 @@ export class AppComponent {
 
     const getPoint = (lat, long) => {
       latHelper.rotation.x = lat;
-      longHelper.rotation.x = long;
+      longHelper.rotation.y = long;
       longHelper.updateMatrixWorld(true);
       return pointHelper.getWorldPosition(temp).toArray();
     }
