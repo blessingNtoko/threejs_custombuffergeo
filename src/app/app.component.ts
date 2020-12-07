@@ -13,6 +13,7 @@ export class AppComponent {
   public renderer = new THREE.WebGLRenderer();
   public camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, .1, 1000);
   public orbControl = new OrbitControls(this.camera, this.renderer.domElement);
+  public textureLoad = new THREE.TextureLoader();
 
   ngOnInit() {
     this.init();
@@ -22,12 +23,15 @@ export class AppComponent {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
 
-    this.scene.background = new THREE.Color('black');
+    this.scene.background = new THREE.Color('grey');
 
     this.camera.position.set(0, 10, 10);
     this.camera.lookAt(0, 0, 0);
     this.orbControl.target.set(0, 0, 0);
     this.orbControl.update();
+
+    this.addLight(-1, 2, 4);
+    this.addLight(1, 2, -2);
 
     const vertices = [
       // front
@@ -35,48 +39,36 @@ export class AppComponent {
       { pos: [1, -1, 1], norm: [0, 0, 1], uv: [1, 0], },
       { pos: [-1, 1, 1], norm: [0, 0, 1], uv: [0, 1], },
 
-      { pos: [-1, 1, 1], norm: [0, 0, 1], uv: [0, 1], },
-      { pos: [1, -1, 1], norm: [0, 0, 1], uv: [1, 0], },
       { pos: [1, 1, 1], norm: [0, 0, 1], uv: [1, 1], },
       // right
       { pos: [1, -1, 1], norm: [1, 0, 0], uv: [0, 0], },
       { pos: [1, -1, -1], norm: [1, 0, 0], uv: [1, 0], },
       { pos: [1, 1, 1], norm: [1, 0, 0], uv: [0, 1], },
 
-      { pos: [1, 1, 1], norm: [1, 0, 0], uv: [0, 1], },
-      { pos: [1, -1, -1], norm: [1, 0, 0], uv: [1, 0], },
       { pos: [1, 1, -1], norm: [1, 0, 0], uv: [1, 1], },
       // back
       { pos: [1, -1, -1], norm: [0, 0, -1], uv: [0, 0], },
       { pos: [-1, -1, -1], norm: [0, 0, -1], uv: [1, 0], },
       { pos: [1, 1, -1], norm: [0, 0, -1], uv: [0, 1], },
 
-      { pos: [1, 1, -1], norm: [0, 0, -1], uv: [0, 1], },
-      { pos: [-1, -1, -1], norm: [0, 0, -1], uv: [1, 0], },
       { pos: [-1, 1, -1], norm: [0, 0, -1], uv: [1, 1], },
       // left
       { pos: [-1, -1, -1], norm: [-1, 0, 0], uv: [0, 0], },
       { pos: [-1, -1, 1], norm: [-1, 0, 0], uv: [1, 0], },
       { pos: [-1, 1, -1], norm: [-1, 0, 0], uv: [0, 1], },
 
-      { pos: [-1, 1, -1], norm: [-1, 0, 0], uv: [0, 1], },
-      { pos: [-1, -1, 1], norm: [-1, 0, 0], uv: [1, 0], },
       { pos: [-1, 1, 1], norm: [-1, 0, 0], uv: [1, 1], },
       // top
       { pos: [1, 1, -1], norm: [0, 1, 0], uv: [0, 0], },
       { pos: [-1, 1, -1], norm: [0, 1, 0], uv: [1, 0], },
       { pos: [1, 1, 1], norm: [0, 1, 0], uv: [0, 1], },
 
-      { pos: [1, 1, 1], norm: [0, 1, 0], uv: [0, 1], },
-      { pos: [-1, 1, -1], norm: [0, 1, 0], uv: [1, 0], },
       { pos: [-1, 1, 1], norm: [0, 1, 0], uv: [1, 1], },
       // bottom
       { pos: [1, -1, 1], norm: [0, -1, 0], uv: [0, 0], },
       { pos: [-1, -1, 1], norm: [0, -1, 0], uv: [1, 0], },
       { pos: [1, -1, -1], norm: [0, -1, 0], uv: [0, 1], },
 
-      { pos: [1, -1, -1], norm: [0, -1, 0], uv: [0, 1], },
-      { pos: [-1, -1, 1], norm: [0, -1, 0], uv: [1, 0], },
       { pos: [-1, -1, -1], norm: [0, -1, 0], uv: [1, 1], },
     ];
 
@@ -103,6 +95,23 @@ export class AppComponent {
     buffGeo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), normNumComponents));
     buffGeo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), uvNumComponents));
 
+    buffGeo.setIndex([
+      0, 1, 2, 2, 1, 3,
+      4, 5, 6, 6, 5, 7,
+      8, 9, 10, 10, 9, 11,
+      12, 13, 14, 14, 13, 15,
+      16, 17, 18, 18, 17, 19,
+      20, 21, 22, 22, 21, 23
+    ]);
+
+    const texture = this.textureLoad.load('../assets/textures/stars.jpg');
+
+    const cubes = [
+      this.makeInst(buffGeo, 'green', -4, texture),
+      this.makeInst(buffGeo, 'red', 4, texture),
+      this.makeInst(buffGeo, 'blue', 0, texture)
+    ];
+
 
     window.addEventListener('resize', () => {
       this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -112,6 +121,13 @@ export class AppComponent {
 
     const animate = (time) => {
       time *= .001;
+
+      cubes.forEach((cube, ndx) => {
+        const speed = 1 + ndx * .1;
+        const rotation = time * speed;
+        cube.rotation.x = rotation;
+        cube.rotation.y = rotation;
+      });
 
       this.orbControl.update();
 
