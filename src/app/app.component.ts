@@ -72,14 +72,33 @@ export class AppComponent {
       { pos: [-1, -1, -1], norm: [0, -1, 0], uv: [1, 1], },
     ];
 
-    const positions = [];
-    const normals = [];
-    const uvs = [];
+    // const positions = [];
+    // const normals = [];
+    // const uvs = [];
+
+    const numVertices = vertices.length;
+    const posNumComponents = 3;
+    const normNumComponents = 3;
+    const uvNumComponents = 2;
+    const positions = new Float32Array(numVertices * posNumComponents);
+    const normals = new Float32Array(numVertices * normNumComponents);
+    const uvs = new Float32Array(numVertices * uvNumComponents);
+    let posNdx = 0;
+    let normNdx = 0;
+    let uvNdx = 0;
 
     for (const vertex of vertices) {
-      positions.push(...vertex.pos);
-      normals.push(...vertex.norm);
-      uvs.push(...vertex.uv);
+      // positions.push(...vertex.pos);
+      // normals.push(...vertex.norm);
+      // uvs.push(...vertex.uv);
+
+      positions.set(vertex.pos, posNdx);
+      normals.set(vertex.norm, normNdx);
+      uvs.set(vertex.uv, uvNdx);
+
+      posNdx += posNumComponents;
+      normNdx += normNumComponents;
+      uvNdx += uvNumComponents;
     };
 
     console.log('Positions ->', positions);
@@ -87,13 +106,10 @@ export class AppComponent {
     console.log('UVs ->', uvs);
 
     const buffGeo = new THREE.BufferGeometry();
-    const posNumComponents = 3;
-    const normNumComponents = 3;
-    const uvNumComponents = 2;
 
-    buffGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), posNumComponents));
-    buffGeo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), normNumComponents));
-    buffGeo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), uvNumComponents));
+    buffGeo.setAttribute('position', new THREE.BufferAttribute(positions, posNumComponents));
+    buffGeo.setAttribute('normal', new THREE.BufferAttribute(normals, normNumComponents));
+    buffGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, uvNumComponents));
 
     buffGeo.setIndex([
       0, 1, 2, 2, 1, 3,
@@ -136,6 +152,12 @@ export class AppComponent {
       requestAnimationFrame(animate);
     }
     requestAnimationFrame(animate);
+  }
+
+  public makeSpherePos(segmentsAround, segmentsDown) {
+    const numVert = segmentsAround * segmentsDown * 6;
+    const numComponents = 3;
+    // const positions = new Float32Array
   }
 
   public makeInst(geometry, color, x, texture?) {
