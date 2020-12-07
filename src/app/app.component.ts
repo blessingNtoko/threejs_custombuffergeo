@@ -25,7 +25,7 @@ export class AppComponent {
 
     this.scene.background = new THREE.Color('grey');
 
-    this.camera.position.set(0, 10, 10);
+    this.camera.position.set(0, 0, 10);
     this.camera.lookAt(0, 0, 0);
     this.orbControl.target.set(0, 0, 0);
     this.orbControl.update();
@@ -49,10 +49,8 @@ export class AppComponent {
     geometry.setAttribute('normal', new THREE.BufferAttribute(normals, normNumComponents));
     geometry.setIndex(indices);
 
-    const texture = this.textureLoad.load('../assets/textures/stars.jpg');
-
     const objs3D = [
-      this.makeInst(geometry, 'red', 0, texture)
+      this.makeInst(geometry, 'red', 0)
     ]
 
     window.addEventListener('resize', () => {
