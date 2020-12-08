@@ -50,7 +50,9 @@ export class AppComponent {
     geometry.setIndex(indices);
 
     const objs3D = [
-      this.makeInst(geometry, 'red', 0)
+      this.makeInst(geometry, 'red', 0),
+      this.makeInst(geometry, 'blue', 4),
+      this.makeInst(geometry, 'green', -4),
     ]
 
     window.addEventListener('resize', () => {
